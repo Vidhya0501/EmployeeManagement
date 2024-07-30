@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
-
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import AxiosService from '../../utils/AxiosService'
 
 const EmployeeLogin = () => {
@@ -29,6 +30,7 @@ const EmployeeLogin = () => {
   return (
     <div className='d-flex justify-content-center align-items-center vh-100 loginPage'>
         <div className='p-3 rounded w-25 border loginForm'>
+        <Link to="/" className='btn border rounded'> <FontAwesomeIcon icon={faArrowLeft} /></Link>
         <h1 className="text-center">EMS</h1>
         <h4 className='text-center mb-3'>Login Page</h4>
             <form onSubmit={handleSubmit}>

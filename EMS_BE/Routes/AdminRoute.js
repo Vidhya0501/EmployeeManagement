@@ -8,33 +8,64 @@ dotenv.config();
 
 const router = express.Router();
 
+//employee signup
+router.post("/adminsignup", (req, res) => {
+  const email = req.body.email;
+
+  const search_sql = `SELECT email FROM admin WHERE email = ?`;
+
+  con.query(search_sql, [email], (err, results) => {
+    if (err) return res.json({ Status: false, Error: "Query Error" });
+
+    // Check if the email is already registered
+    if (results.length > 0) {
+      return res.json({ Status: false, Error: "Already Registered" });
+    }
+
+    // If the email is not registered, proceed to insert the new admin
+    const sql = `INSERT INTO admin (name, email, password) VALUES (?)`;
+
+    bcrypt.hash(req.body.password, 10, (err, hash) => {
+      if (err)
+        return res.json({ Status: false, Error: "Password Hashing Error" });
+
+      const values = [req.body.name, req.body.email, hash];
+
+      con.query(sql, [values], (err, result) => {
+        if (err) return res.json({ Status: false, Error: err });
+        return res.json({ Status: true, result });
+      });
+    });
+  });
+});
+
+//admin login
 router.post("/adminlogin", (req, res) => {
-  const sql = "SELECT * from admin Where email = ? and password = ?";
-  con.query(sql, [req.body.email, req.body.password], (err, result) => {
+  const sql = "SELECT * FROM admin WHERE email = ?";
+  con.query(sql, [req.body.email], (err, result) => {
     if (err) return res.json({ loginStatus: false, Error: "Query error" });
+
     if (result.length > 0) {
-      const email = result[0].email;
-      const token = jwt.sign(
-        { role: "admin", email: email, id: result[0].id },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-      );
-      res.cookie("token", token);
-      return res.json({ loginStatus: true });
+      bcrypt.compare(req.body.password, result[0].password, (err, response) => {
+        if (err || !response)
+          return res.json({ loginStatus: false, Error: "Invalid credentials" });
+
+        const email = result[0].email;
+        const token = jwt.sign(
+          { role: "admin", email: email, id: result[0].id },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+        res.cookie("token", token);
+        return res.json({ loginStatus: true, id: result[0].id });
+      });
     } else {
       return res.json({ loginStatus: false, Error: "Invalid credentials" });
     }
   });
 });
 
-router.get("/category", (req, res) => {
-  const sql = "SELECT * FROM category";
-  con.query(sql, (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" });
-    return res.json({ Status: true, Result: result });
-  });
-});
-
+//add category
 router.post("/add_category", (req, res) => {
   const sql = "INSERT INTO category (`name`) VALUES (?)";
   con.query(sql, [req.body.category], (err, result) => {
@@ -43,26 +74,47 @@ router.post("/add_category", (req, res) => {
   });
 });
 
+//category
+router.get("/category", (req, res) => {
+  const sql = "SELECT * FROM category";
+  con.query(sql, (err, result) => {
+    if (err) return res.json({ Status: false, Error: "Query Error" });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+//add employee - employee signup
 router.post("/add_employee", (req, res) => {
-  const sql = `INSERT INTO employee 
-    (name,email,password, address, salary, category_id) 
-    VALUES (?)`;
-  bcrypt.hash(req.body.password, 10, (err, hash) => {
+  const email = req.body.email;
+
+  const search_sql = `SELECT email FROM employee WHERE email = ?`;
+
+  con.query(search_sql, [email], (err, results) => {
     if (err) return res.json({ Status: false, Error: "Query Error" });
 
-    const values = [
-      req.body.name,
-      req.body.email,
-      hash,
-      req.body.address,
-      req.body.salary,
+    if (results.length > 0) {
+      return res.json({ Status: false, Error: "Already added" });
+    }
 
-      req.body.category_id,
-    ];
+    const sql = `INSERT INTO employee (name, email, password, address, salary, category_id) VALUES (?)`;
 
-    con.query(sql, [values], (err, result) => {
-      if (err) return res.json({ Status: false, Error: err });
-      return res.json({ Status: true });
+    bcrypt.hash(req.body.password, 10, (err, hash) => {
+      if (err)
+        return res.json({ Status: false, Error: "Password Hashing Error" });
+
+      const values = [
+        req.body.name,
+        req.body.email,
+        hash,
+        req.body.address,
+        req.body.salary,
+        req.body.category_id,
+      ];
+
+      con.query(sql, [values], (err, result) => {
+        if (err) return res.json({ Status: false, Error: err });
+        return res.json({ Status: true });
+      });
     });
   });
 });

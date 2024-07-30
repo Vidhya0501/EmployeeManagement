@@ -13,12 +13,14 @@ import Start from './Components/Start'
 import EmployeeLogin from './Components/EmployeeLogin'
 import EmployeeDetail from './Components/EmployeeDetail'
 import PrivateRoute from './Components/PrivateRoute'
+import Signup from './Components/Signup'
 
 function App() {
   return (
     <BrowserRouter>
     <Routes>
       <Route path='/' element={<Start />}></Route>
+      <Route path='/adminsignup' element={<Signup/>}></Route>
       <Route path='/adminlogin' element={<Login />}></Route>
       <Route path='/employee_login' element={<EmployeeLogin />}></Route>
       <Route path='/employee_detail/:id' element={<EmployeeDetail />}></Route>
